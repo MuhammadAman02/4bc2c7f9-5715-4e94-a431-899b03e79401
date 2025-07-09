@@ -1,17 +1,36 @@
-import Fastify from "fastify";
-import root from "./routes/root";
+import Fastify from 'fastify';
+import { authRoutes } from './routes/auth.route';
 
-const app = Fastify({
-  logger: true,
-});
+export async function createApp() {
+  const app = Fastify({
+    logger: {
+      level: 'info',
+    },
+  });
 
-// Register routes
-app.register(root, { prefix: "/" });
+  // Global error handler
+  app.setErrorHandler(async (error, request, reply) => {
+    console.error('Global error handler:', error);
+    
+    if (error.validation) {
+      return reply.status(400).send({
+        error: 'Validation failed',
+        details: error.validation,
+      });
+    }
+    
+    return reply.status(500).send({
+      error: 'Internal Server Error',
+    });
+  });
 
-// Global error handler
-app.setErrorHandler((error, request, reply) => {
-  app.log.error(error);
-  reply.status(500).send({ error: "Internal Server Error" });
-});
+  // Health check endpoint
+  app.get('/api/health', async (request, reply) => {
+    return { status: 'OK', message: 'Joylo Backend is running' };
+  });
 
-export default app;
+  // Register routes
+  await app.register(authRoutes);
+
+  return app;
+}

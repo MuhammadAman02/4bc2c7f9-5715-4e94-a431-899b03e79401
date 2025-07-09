@@ -1,13 +1,22 @@
-import app from "./app"; // ✅ This is a Fastify instance
+import { createApp } from './app';
+import { env } from './config/env';
 
-const start = async () => {
+async function start() {
   try {
-    await app.listen({ port: 3000, host: "0.0.0.0" });
-    console.log("🚀 Server listening at http://localhost:3000");
+    const app = await createApp();
+    
+    await app.listen({
+      port: env.PORT,
+      host: '0.0.0.0',
+    });
+    
+    console.log(`🚀 Joylo Backend server running on port ${env.PORT}`);
+    console.log(`📋 Health check: http://localhost:${env.PORT}/api/health`);
+    console.log(`🔐 Login endpoint: http://localhost:${env.PORT}/api/auth/login`);
   } catch (err) {
-    app.log.error(err);
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
-};
+}
 
 start();
